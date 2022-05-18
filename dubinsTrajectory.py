@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 from enum import Enum
+from python_tsp.exact import solve_tsp_dynamic_programming
 
 
 class TurnType(Enum):
@@ -263,8 +264,10 @@ def main():
     pt1 = Waypoint(0,0,0)
     pt2 = Waypoint(6000,7000,260)
     pt3 = Waypoint(1000,15000,180)
-    #pt4 = Waypoint(5000,15000,270)
-    Wptz = [pt1, pt2, pt3]
+    pt4 = Waypoint(5000,15000,270)
+
+    # waypoints declared in order
+    Wptz = [pt1, pt2, pt3, pt4]
 
     # prepare adjacency matrix for tsp
     adjMatrix = [[0 for _ in Wptz] for _ in Wptz]
@@ -273,24 +276,35 @@ def main():
         for j in range(len(adjMatrix)):
             param = calcDubinsPath(Wptz[i], Wptz[j], 90, 20)
             adjMatrix[i][j] = param.cost
-    print(adjMatrix)
 
 
-    # Run the code
+
+    # TSP
+    distance_matrix = np.array(adjMatrix)
+    best_permutation, min_distance  = solve_tsp_dynamic_programming(distance_matrix)
+    #print(best_permutation, min_distance)
+
+    
     i = 0
-
-    # TODO: tsp(adjMatrix) -> order of points for min cost
     while i<len(Wptz)-1:
-        param = calcDubinsPath(Wptz[i], Wptz[i+1], 90, 20)
+        param = calcDubinsPath(Wptz[best_permutation[i]], Wptz[best_permutation[i+1]], 90, 20)
         path = dubins_traj(param,1)
 
-
-
         # Plot the results
-        plt.plot(Wptz[i].x,Wptz[i].y,'kx')
-        plt.plot(Wptz[i+1].x,Wptz[i+1].y,'kx')
-        plt.plot(path[:,0],path[:,1],'b-')
-        i+=1
+        plt.plot(Wptz[i].x, Wptz[i].y, 'kx')
+        plt.plot(Wptz[i + 1].x, Wptz[i + 1].y, 'kx')
+        plt.plot(path[:, 0], path[:, 1], 'b-')
+        i += 1
+
+    # reaching back from the last point to the
+    # starting one (optional)
+    param = calcDubinsPath(Wptz[best_permutation[-1]], Wptz[best_permutation[0]], 90, 20)
+    path = dubins_traj(param, 1)
+
+    plt.plot(Wptz[-1].x, Wptz[-1].y, 'kx')
+    plt.plot(Wptz[0].x, Wptz[0].y, 'kx')
+    plt.plot(path[:, 0], path[:, 1], 'b-')
+
 
     plt.grid(True)
     plt.axis("equal")
